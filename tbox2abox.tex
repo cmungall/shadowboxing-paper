@@ -82,16 +82,21 @@
 OWL2 has a strict separation between classes (TBox) and the domain of
 discourse (ABox). This separation generally works well for the tasks
 that OWL is designed for, but there are scenarios where it is
-desirable to model simultaneuously as classes and individuals. This
-can also have advantages when mapping an OWL TBox to graph
-representations such as RDF, where the standard mapping produces a
-striping pattern that does not align well with conventional graph
-representations.
+desirable to model certain entities simultaneuously as classes and
+individuals. Motivations include the different logical properties of
+the ABox as well as the desire to have a simpler RDF representation
+that aligns with conventional graph-oriented views of ontologies. Many
+existing attempts to put the ontology in the ABox are ad-hoc or even
+accidental, and suffer from limitations.
 
 In this document we describe a method for modeling an OWL TBox inside
 an ABox that is \emph{valid} with respect to the original ontology,
-allows additional entailments, and provides a more useful substrate
-for graph traversal than the standard OWL RDF mapping. 
+preserves a restricted but useful set of entailments, and allows for
+certain kinds of entailment not possible in a TBox. The RDF
+representation of this ABox aligns well with conventional graph
+representations. It also opens up possibilities for alternate ways of
+approaching the modeling of some domains that may not be best served
+by class-oriented models.
 
 \end{abstract}
 
@@ -107,54 +112,74 @@ set of \emph{properties})\footnote{other object types not relevant for
   discourse}. These two sets do not share members; OWL2 introduces the
 notion of \emph{punning}, whereby the same name (i.e. IRI) can refer
 to either a class or individual, but this is just a syntactic
-convenience for sharing annotations. Logically, a punned name is in
-fact two names, and the ABox-TBox distinction is thus maintained.
+convenience for sharing annotations. Logically, the interpretation of
+a punned name is in fact two names, and the ABox-TBox distinction is
+thus maintained.
 
 The modeler must decide how to partition their objects of interest
-into the TBox and ABox. In general, units of classification
-(i.e. classes) should be modeled in the TBox as OWL classes, as this
-can maximally leverage OWL tooling. For example, an ontology may
-contain a class ``hippocampus'', representing the set of all
-hippocampi; it would be unusual for an OWL ontology to have an
-\emph{individual} named ``hippocampus''.
+into the TBox and ABox. This is often trivial, with the TBox
+containing classes such as \pr{dog}, \pr{person}, \pr{city} and the
+ABox containing individuals such as \pr{Fido}, \pr{Fred} and \pr{Oakland}.
 
 The choice is not always straightforward. In the biological domain,
-valid arguments exist for whether objects such as \emph{gene} or
-\emph{species} should be modeled in the ABox or TBox, and the modeler
-may be guided by a variety of considerations, including philosophical
-principles or practical modeling consequences based on the constraints
-imposed by the choice. 
+valid arguments exist for whether genes or species should be modeled
+in the ABox or TBox, and the modeler may be guided by a variety of
+considerations, including philosophical principles or practical
+modeling consequences based on the differing logical properties of the
+ABox and TBox and the kinds of reasoning tasks supported.
 
-Modeling in the ABox provides certain advantages - if the objects are
-in the domain of discourse they are more readily queryable. Certain
-limitations can be bypassed such as the tree model property of OWL
-TBoxes - for example, it is impossible to model a cyclic molecule in
-an OWL TBox (see Dumontier 2007\cite{Dumontier2007}), so there may be
-practical advantages in modeling chemical structures such as
-``benzene'' in the ABox.
+Modeling in the ABox provides certain advantages - examples include:
+
+\begin{enumerate}
+
+\item Objects in the ABox are in the domain of discourse. They are
+  more readily queryable.
+
+\item The ABox supports cyclic structures. In contrast, without
+  extensions such as DL graphs, the TBox has the constraint that
+  models must be trees. This means it is impossible to provide a
+  complete description that classifies cyclic molecules (e.g. benzene)
+  in the TBox. (see Dumontier 2007\cite{Dumontier2007})
+
+\item Mapping an ABox to RDF does not introduce new blank nodes - in
+  contrast, mapping a TBox to RDF frequently introduces new blank
+  nodes, introducing a ``striping'' pattern in the corresponding RDF
+  graph (see next section).
+
+\end{enumerate}
+
+Of course, if we over-model in the ABox we lose the ability to
+classify individuals, to entail subclass relationships and to detect
+unsatisfiability of classes - tasks that are vital in modern ontology
+construction and use and one of the main motivations for using OWL in
+the first place.
 
 \subsection{OWL, RDF and Graphs}
 
-Ontologies are commonly conceived of as graphs; for example, the
-seminal Gene Ontology paper\cite{Ashburner2000} uses the datamodel of
-a Directed Acyclic Graph, and most bioinformatic tools and relational
-databases use a graph model to represent the
-ontology\cite{Mungall2007}. Here, each class is mapped to a vertex $V$
-in the graph, with each axiom connecting two classes being mapped to
-an edge $E$, with the ontology being mapped to the graph $G$, where
-$G=<V,E>$.
+Ontologies are commonly conceived of in graph-theoretic terms; for
+example, the seminal Gene Ontology paper\cite{Ashburner2000} uses the
+datamodel of a Directed Acyclic Graph, and most bioinformatic tools
+and relational databases use a graph model to represent the
+ontology\cite{Mungall2007}. We define a \emph{simple graph mapping} (SGM) of
+an ontology $O$ to a graph $G = <V,E>$ as one in which each class is
+mapped to a vertex $V$ in the graph, with axioms connecting two
+classes being mapped to an edge $E$. A property of the SGM is that no
+new nodes are introduced.
 
 RDF (Resource Description Framework) is a subset of first-order logic
 consisting of ``subject-predicate-object triples'' i.e. predicate
-sentences with two arguments. This has a natural mapping to graphs,
-with each triple forming an edge $E$.
+sentences with two arguments. This has a natural mapping to a graph
+$G$, with each triple $<S P O>$ forming an edge $E$ between source
+node $S$ and target node $O$ labeled by $P$.
 
 An OWL ontology can be represented as an RDF graph, i.e. a set of
 triples. There is a standard serialization into triples provided by
 the W3 recommendation \emph{mapping to
-  rdf}\footnote{http://www.w3.org/TR/owl2-mapping-to-rdf/}.
+  rdf}\footnote{http://www.w3.org/TR/owl2-mapping-to-rdf/}. The
+mapping of OWL to RDF to a graph is not an SGM, as the following
+example shows.
 
-Following this serialization, a single existential axiom of the
+Under the W3C mapping, a single existential axiom of the
 form\footnote{We use Manchester Syntax to write OWL axioms}:
 
 \begin{verbatim}
@@ -187,7 +212,9 @@ bipartite graph, rather than a ``clean'' graph as outlined above.
 %commonly conceived of as a single edge in a graph whose nodes are
 %classes, with each edge X-Y labeled with R.
 
-Many knowledge bases (e.g. freebase; neurolex) use a simple form of
+\subsection{Naive ABoxification leads to incoherency}
+
+Many knowledge bases (e.g. Freebase; Neurolex) use a simple form of
 knowledge representation where concepts are linked via triples,
 eschewing more formally specified OWL axioms and attendant reasoning
 benefits.
