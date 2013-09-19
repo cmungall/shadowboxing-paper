@@ -119,7 +119,19 @@ thus maintained.
 The modeler must decide how to partition their objects of interest
 into the TBox and ABox. This is often trivial, with the TBox
 containing classes such as \pr{dog}, \pr{person}, \pr{city} and the
-ABox containing individuals such as \pr{Fido}, \pr{Fred} and \pr{Oakland}.
+ABox containing individuals such as \pr{Fido}, \pr{Fred} and
+\pr{Oakland} (see Fig \ref{fig:intro}).
+
+%----------------------------------------
+\begin{figure}
+\center
+\includegraphics[width=7cm]{intro}
+\caption{Separation of ABox (individuals, boxes) and TBox (classes,
+  ovals) in a trivial ontology. }.
+\label{fig:into}
+\end{figure}
+%----------------------------------------
+
 
 The choice is not always straightforward. In the biological domain,
 valid arguments exist for whether genes or species should be modeled
@@ -200,7 +212,21 @@ existential axioms (as is standard for most bio-ontologies -
 e.g. partonomies in anatomical ontologies). This can be a hindrance
 when working with ontologies using RDF tools that do not support an
 OWL syntactic sugar layer, or in using technologies designed for
-reasoning over triples.
+reasoning over triples. See figure \ref{fig:partonomy} for an illustration.
+
+%----------------------------------------
+\begin{figure}
+\center
+\includegraphics[width=7cm]{partonomy}
+\caption{Example two-class partonomy represented in (A) OWL Manchester
+  Syntax and (B) the semantically identical RDF-level
+  representation. (C) shows a naive translation to a simple graph, in
+  which the classes are mapped to the ABox, and class axioms become
+  object property assertions.}
+\label{fig:partonomy}
+\end{figure}
+%----------------------------------------
+
 
 It is also problematic when the RDF representation of the OWL is
 directly mapped to a graph when using graph-based software
