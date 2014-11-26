@@ -107,7 +107,7 @@ by class-oriented models.
 With traditional Description Logics, objects can belong to either the
 TBox (``terminology'' box, i.e. set of \emph{classes}), the ABox
 (``assertion'' box, i.e. set of \emph{individuals}) or the RBox (the
-set of \emph{properties})\footnote{other object types not relevant for
+set of \emph{properties})\footnote{datatypes etc not relevant for
   this paper}. The ABox is also known as the \emph{domain of
   discourse}. These two sets do not share members; OWL2 introduces the
 notion of \emph{punning}, whereby the same name (i.e. IRI) can refer
@@ -154,14 +154,15 @@ Modeling in the ABox provides certain advantages - examples include:
   complete description that classifies cyclic molecules (e.g. benzene)
   in the TBox. (see Dumontier 2007\cite{Dumontier2007})
 
-\item Mapping an ABox to RDF does not introduce new blank nodes - in
-  contrast, mapping a TBox to RDF frequently introduces new blank
-  nodes, introducing a ``striping'' pattern in the corresponding RDF
-  graph (see next section).
+\item Mapping an ABox to RDF does not introduce new anonymous
+  individuals - in contrast, mapping a TBox to RDF frequently
+  introduces new blank nodes (e.g. for existential restrictions),
+  introducing a ``striping'' pattern in the corresponding RDF graph
+  (see next section).
 
 \end{enumerate}
 
-Of course, if we over-model in the ABox we lose the ability to
+Of course, if we model entirely in the ABox we lose the ability to
 classify individuals, to entail subclass relationships and to detect
 unsatisfiability of classes - tasks that are vital in modern ontology
 construction and use and one of the main motivations for using OWL in
@@ -173,16 +174,16 @@ Ontologies are commonly conceived of in graph-theoretic terms; for
 example, the seminal Gene Ontology paper\cite{Ashburner2000} uses the
 datamodel of a Directed Acyclic Graph, and most bioinformatic tools
 and relational databases use a graph model to represent the
-ontology\cite{Mungall2007}. We define a \emph{simple graph mapping} (SGM) of
-an ontology $O$ to a graph $G = <V,E>$ as one in which each class is
-mapped to a vertex $V$ in the graph, with axioms connecting two
-classes being mapped to an edge $E$. A property of the SGM is that no
-new nodes are introduced.
+ontology\cite{Mungall2007}. We define a \emph{simple graph mapping}
+(SGM) of an ontology $O$ to a graph $G = <V,E>$ as one in which each
+class $C$ is mapped to a single vertex $V$ in the graph, with axioms
+connecting two classes being mapped to an edge $E$. A property of the
+SGM is that no new nodes are introduced.
 
 RDF (Resource Description Framework) is a subset of first-order logic
 consisting of ``subject-predicate-object triples'' i.e. predicate
 sentences with two arguments. This has a natural mapping to a graph
-$G$, with each triple $<S P O>$ forming an edge $E$ between source
+$G$, with each triple $<S, P, O>$ forming an edge $E$ between source
 node $S$ and target node $O$ labeled by $P$.
 
 An OWL ontology can be represented as an RDF graph, i.e. a set of
@@ -205,15 +206,16 @@ Is mapped to 4 triples\footnote{We use n-triples format to write RDF}
 X rdfs:subClassOf _:1 .
 _:1 a owl:Restriction .
 _:1 owl:onProperty R .
-_:1 owl:someValuesFrom Y /
+_:1 owl:someValuesFrom Y .
 \end{verbatim}
 
-This can become verbose where ontologies contain multiple such
+This quickly becomes verbose where ontologies contain multiple such
 existential axioms (as is standard for most bio-ontologies -
 e.g. partonomies in anatomical ontologies). This can be a hindrance
 when working with ontologies using RDF tools that do not support an
 OWL syntactic sugar layer, or in using technologies designed for
-reasoning over triples. See figure \ref{fig:partonomy} for an illustration.
+reasoning over triples. See figure \ref{fig:partonomy} for an
+illustration.
 
 %----------------------------------------
 \begin{figure}
@@ -306,7 +308,12 @@ Even when translating in one direction, we can end up with undesired
 inferences (e.g. consider domain and range constraints).
 
 Despite this problem, the naive translation is sometimes used where
-there is a desire to have a simpler RDF reqpresentation.
+there is a desire to have a simpler RDF representation.
+
+It could be argued that the incoherency is not an issue if the RDF and
+OWL worlds never mix. However, there may be use cases where it is
+desirable to have both representations simultaneously within an OWL
+environment.
 
 \subsection{Requirements for a graph mapping of OWL2}
 
@@ -314,8 +321,8 @@ Our requirements for a mapping from OWL2 to a graph are:
 
 \begin{enumerate}
 
-\item aligns with a basic graph representation (does not introduce
-  blank nodes and striping)
+\item produces a SGM (no striping; does not introduce blank nodes where there are
+  no anonymous individuals in the OWL)
 
 \item coherency-preserving
 
@@ -428,7 +435,7 @@ See example in introduction
 
 \subsection{Translation of equivalence axioms}
 
-Equivalence axioms currently have an incomplete translation. Currently only "genus-differentia" style
+Equivalence axioms currently have an incomplete translation. Currently only ``genus-differentia'' style
 are translated:
 
 
@@ -444,7 +451,8 @@ GenId R1' Y1,
 
 Where GenId is an auto-generated IRI (e.g. using a UUID) to avoid falling outside OWL2
 
-TODO: this relies on CWA, need to explicitly close the world
+TODO: this relies on CWA, need to explicitly close the world. Maybe
+there is no use case for this?
 
 \subsection{Translation of annotation axioms}
 
@@ -545,7 +553,7 @@ becomes a query for a single assertion:
 ?x ?r' ?y
 \end{verbatim}
 
-Which can be performed easily with the OWLAPI. In addition, the
+Which can be performed easily with the OWLAPI Reasoner API. In addition, the
 corresponding SPARQL query is simple, and the required entailment only
 requires a limited number of property chains in most cases.
 
@@ -568,55 +576,10 @@ example, an existential restriction axiom may be mapped to a single
 edge annotated with both the object property and the expression type
 (ObjectSomeValuesFrom). 
 
-\subsection{Formalization of Type-Level Relations}
 
-[out of scope for this paper?]
+\subsection{Phylogenetic trees of species}
 
-The OBO Relations Ontology paper from 2005\cite{Smith2005} formalized
-a set of binary type level relations in terms of instance-level binary
-or ternary (time-indexed) relations. In this formalization,
-classification units such as ``cell'' and ``cell nucleus'' are
-conceived of as ``types'' or ``universals'', and are considered to be
-part of the domain of discourse.
 
-For example, the logic sentence ``CellNucleus \emph{part of} Cell''
-(using the 2-argument type-level part-of relation) has an interpretation:
-
-$
-\A x \A t : \instanceOf(x, \CellNucleus, t) \imp \\
- \E y \instanceOf(y, \Cell, t), \partOf(x,y,t)
-$
-
-There is no agreed-upon alignment of the RO 2005 paper with
-OWL. Whilst the type-level relationships (such as that between nucleus
-and cell) might naturally by represented using a single triple, this
-was generally eschewed by ontologies using OWL, and instead
-existential restrictions were used\cite{golbreich2007obo}, in order to
-maximize use of OWL and OWL reasoners. However, this approach has
-problems as it introduces binary instance-level relations whose
-temporal interpretation is not clear.
-
-The TBox shadowing strategy outlined in this document could be used to
-provide a partial alignment of RO-2005 to OWL.
-
-Here, the RO-2005 notion of ``type level relation'' corresponds
-directly to shadowed object properties, and the punned class names
-correspond to universals/types (which are in the domain of
-discourse).
-
-Under this interpretation, the shadowed TBox axioms in the ontology
-$O'$ would be conceived of as the primary or canonical OWL
-representation of the ontology. The corresponding TBox representation
-would be conceived of as a derived artifact that can be used in
-conjunction with OWL tools and OWL reasoners.
-
-This is just a preliminary sketch of the approach - it does not
-address time-indexed instance level relations, and it leaves open the
-possibility of different kinds of temporal quantification for the type
-level relations (e.g. there may be a TLR for at-some-times as well as
-at-all-times).
-
-\subsection{Phylogenetic trees}
 
 \subsection{Anatomical structures and homology}
 
@@ -717,6 +680,54 @@ TBox model.
 THIS IS GETTING TOO WAFFLY...
 
 ADD EXAMPLE INVOLVING PHYLOGENETIC TREES
+
+\subsection{Formalization of Type-Level Relations}
+
+[out of scope for this paper?]
+
+The OBO Relations Ontology paper from 2005\cite{Smith2005} formalized
+a set of binary type level relations in terms of instance-level binary
+or ternary (time-indexed) relations. In this formalization,
+classification units such as ``cell'' and ``cell nucleus'' are
+conceived of as ``types'' or ``universals'', and are considered to be
+part of the domain of discourse.
+
+For example, the logic sentence ``CellNucleus \emph{part of} Cell''
+(using the 2-argument type-level part-of relation) has an interpretation:
+
+$
+\A x \A t : \instanceOf(x, \CellNucleus, t) \imp \\
+ \E y \instanceOf(y, \Cell, t), \partOf(x,y,t)
+$
+
+There is no agreed-upon alignment of the RO 2005 paper with
+OWL. Whilst the type-level relationships (such as that between nucleus
+and cell) might naturally by represented using a single triple, this
+was generally eschewed by ontologies using OWL, and instead
+existential restrictions were used\cite{golbreich2007obo}, in order to
+maximize use of OWL and OWL reasoners. However, this approach has
+problems as it introduces binary instance-level relations whose
+temporal interpretation is not clear.
+
+The TBox shadowing strategy outlined in this document could be used to
+provide a partial alignment of RO-2005 to OWL.
+
+Here, the RO-2005 notion of ``type level relation'' corresponds
+directly to shadowed object properties, and the punned class names
+correspond to universals/types (which are in the domain of
+discourse).
+
+Under this interpretation, the shadowed TBox axioms in the ontology
+$O'$ would be conceived of as the primary or canonical OWL
+representation of the ontology. The corresponding TBox representation
+would be conceived of as a derived artifact that can be used in
+conjunction with OWL tools and OWL reasoners.
+
+This is just a preliminary sketch of the approach - it does not
+address time-indexed instance level relations, and it leaves open the
+possibility of different kinds of temporal quantification for the type
+level relations (e.g. there may be a TLR for at-some-times as well as
+at-all-times).
 
 \section{Discussion}
 
