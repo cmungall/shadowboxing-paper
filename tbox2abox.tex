@@ -69,7 +69,7 @@
 \title{Shadowboxing: Mirroring the TBox in the ABox}
 
 \author{Christopher J. Mungall\,$^{1}$\footnote{to whom correspondence should be addressed}}
-\address{$^{1}$Genomics Division, Lawrence Berkeley National Laboratory, MS84R017, 1 Cyclotron Road, Berkeley, CA 94720 USA}
+\address{$^{1}$Environmental Genomics and Systems Biology Division, Lawrence Berkeley National Laboratory, MS977, 1 Cyclotron Road, Berkeley, CA 94720 USA}
 
 \history{}
 
@@ -223,7 +223,7 @@ illustration.
 \includegraphics[width=7cm]{partonomy}
 \caption{Example two-class partonomy represented in (A) OWL Manchester
   Syntax and (B) the semantically identical RDF-level
-  representation. (C) shows a naive translation to a simple graph, in
+  representation (svf = someValuesFrom). (C) shows a naive translation to a simple graph, in
   which the classes are mapped to the ABox, and class axioms become
   object property assertions.}
 \label{fig:partonomy}
@@ -532,7 +532,7 @@ TODO - compare queries.
 
 TODO - example query from Neurolex paper
 
-\subsection{Finding ancestors}
+\subsection{Finding ancestors over existential restrictions}
 
 It is surprisingly difficult to query a conventional TBox ontology for
 descendants over any relationship type. In OWL2 this is can be
@@ -579,7 +579,16 @@ edge annotated with both the object property and the expression type
 
 \subsection{Phylogenetic trees of species}
 
+The OBO Library translation of the NCBI Taxonomy represents each taxon
+as a class. There are various alternate ways of doing this - see
+Schulz et al\cite{Schulz}. For example, each node could be an
+individual representing genome lineage or population. The
+relationships between these individuals could be in the domain of
+discourse - e.g. descended from.
 
+[SAY WHY THIS MATTERS]
+
+\subsection{Chemical structures}
 
 \subsection{Anatomical structures and homology}
 
@@ -729,6 +738,10 @@ possibility of different kinds of temporal quantification for the type
 level relations (e.g. there may be a TLR for at-some-times as well as
 at-all-times).
 
+\section{Evaluation}
+
+[there is none]
+
 \section{Discussion}
 
 Even in an OWL environment, answering questions such as "what are the descendants of 'finger'" and
@@ -738,6 +751,10 @@ materialize R-some-Y classes.
 More generally, because classes are part of the TBox and not in the domain of discourse, certain
 kinds of queries are harder. These include queries for homologous structures, where these structures
 are traditionally represented as classes.
+
+\subsection{Prototype and analogical reasoning}
+
+TODO
 
 
 \section{Conclusions}
